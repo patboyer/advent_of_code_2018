@@ -8,7 +8,7 @@ namespace advent_of_code_2018
         {
             var day = new Day03();
             day.SolveA();
-            //day.SolveB();
+            day.SolveB();
         }
     }
 }
