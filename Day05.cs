@@ -53,9 +53,7 @@ namespace advent_of_code_2018
                 char uc = (char)((int)c - 32);
                 string s = text.Replace(c.ToString(), string.Empty).Replace(uc.ToString(), string.Empty);
                 s = React(s);
-
-                if (n > s.Length)
-                    n = s.Length;
+                n = Math.Min(n, s.Length);
             }
 
             Console.WriteLine("Day 05 B: " + n);  //=  5278
