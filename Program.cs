@@ -6,7 +6,7 @@ namespace advent_of_code_2018
     {
         static void Main(string[] args)
         {
-            var day = new Day05();
+            var day = new Day06();
             day.SolveA();
             day.SolveB();
         }
