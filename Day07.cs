@@ -14,12 +14,14 @@ namespace advent_of_code_2018
             public char name;
             public List<Node> parents;
             public List<Node> children;
+            public bool ready;
 
             public Node(char p_name)
             {
                 name     = p_name;
                 parents  = new List<Node>();
                 children = new List<Node>();
+                ready    = false;
             }
 
             public override string ToString()
@@ -41,42 +43,6 @@ namespace advent_of_code_2018
             public int CompareTo(Node other)
             {
                 return name.CompareTo(other.name);
-            }
-        }
-
-        class Worker
-        {
-            public bool IsAvailable;
-            private Node _job;
-            private int _duration;
-            private int _time;
-
-            public Worker()
-            {
-                IsAvailable = true;
-            }
-
-            public void AssignWork(Node p_job, int p_duration)
-            {
-                IsAvailable = false;
-                _job        = p_job;
-                _duration   = p_duration;
-                _time       = 0;
-            }
-
-            public Node DoWork()
-            {
-                _time++;
-
-                if (_time == _duration)
-                {
-                    IsAvailable = true;
-                    return _job;
-                }
-                else
-                { 
-                    return null;
-                }
             }
         }
 
@@ -103,24 +69,32 @@ namespace advent_of_code_2018
             return nodes.Values.ToList();
         }
 
-        public string foo(Node n)
-        {
-            return n.name + string.Join("", n.parents.OrderByDescending(node => node).Select(node => foo(node)));
-        }
-
         public void SolveA()
         {
             List<Node> nodes = ParseFile("07_input.txt");
-            Node start = nodes.Where(n => n.children.Count() == 0).First();
-            Console.WriteLine(foo(start));
+            List<Node> done  = new List<Node>();
+            List<Node> todo  = nodes.Where(n => n.parents.Count() == 0).ToList();
+
+            while (done.Count() < nodes.Count())
+            {
+                foreach (Node t in todo)
+                {
+                    t.ready = (t.parents.Where(p => !done.Contains(p)).Count() == 0);
+                }
+
+                Node job = todo.Where(n => n.ready).OrderBy(n => n).First();
+                todo.Remove(job);
+                done.Add(job);
+                todo = todo.Union(job.children).ToList();
+            }
+
+            string result = string.Join("", done.Select(n => n.name));
+            Console.WriteLine("Day 07 A: " + result);
         }
 
         public void SolveB()
         {
             List<Node> nodes = ParseFile("07_input.txt");
-            Project proj = new Project(nodes);
-            proj.Execute(2, 1);
-            Console.WriteLine("Day 07 B: " + proj.Duration);  //= 
         }
     }
 }
