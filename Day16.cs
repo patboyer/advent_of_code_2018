@@ -8,110 +8,49 @@ namespace advent_of_code_2018
 {
     class Day16
     {
-        public class CPU
+        private static Func<int[], int, int, int> addr = (int[] reg, int in1, int in2) => reg[in1] + reg[in2];
+        private static Func<int[], int, int, int> addi = (int[] reg, int in1, int in2) => reg[in1] + in2;
+        private static Func<int[], int, int, int> mulr = (int[] reg, int in1, int in2) => reg[in1] * reg[in2];
+        private static Func<int[], int, int, int> muli = (int[] reg, int in1, int in2) => reg[in1] * in2;
+        private static Func<int[], int, int, int> banr = (int[] reg, int in1, int in2) => reg[in1] & reg[in2];
+        private static Func<int[], int, int, int> bani = (int[] reg, int in1, int in2) => reg[in1] & in2;
+        private static Func<int[], int, int, int> borr = (int[] reg, int in1, int in2) => reg[in1] | reg[in2];
+        private static Func<int[], int, int, int> bori = (int[] reg, int in1, int in2) => reg[in1] | in2;
+        private static Func<int[], int, int, int> setr = (int[] reg, int in1, int in2) => reg[in1];
+        private static Func<int[], int, int, int> seti = (int[] reg, int in1, int in2) => in1;
+        private static Func<int[], int, int, int> gtir = (int[] reg, int in1, int in2) => (in1 > reg[in2]) ? 1 : 0;
+        private static Func<int[], int, int, int> gtri = (int[] reg, int in1, int in2) => (reg[in1] > in2) ? 1 : 0;
+        private static Func<int[], int, int, int> gtrr = (int[] reg, int in1, int in2) => (reg[in1] > reg[in2]) ? 1 : 0;
+        private static Func<int[], int, int, int> eqir = (int[] reg, int in1, int in2) => (in1 == reg[in2]) ? 1 : 0;
+        private static Func<int[], int, int, int> eqri = (int[] reg, int in1, int in2) => (reg[in1] == in2) ? 1 : 0;
+        private static Func<int[], int, int, int> eqrr = (int[] reg, int in1, int in2) => (reg[in1] == reg[in2]) ? 1 : 0;
+
+        private List<Func<int[], int, int, int>> instr = new List<Func<int[], int, int, int>>() {
+            bani, addr, mulr, addi,   
+            gtri, banr, borr, eqri,  
+            seti, eqrr, bori, setr, 
+            eqir, muli, gtrr, gtir
+        };
+
+        public int[] ExecInstr(int[] reg, int cmd, int in1, int in2, int output)
         {
-            private int[] _registers = { 0, 0, 0, 0 };
-
-            public void Set(int[] src)
-            {
-                Array.Copy(src, 0, _registers, 0, 4);
-            }
-
-            public int[] Get()
-            {
-                return _registers;
-            }
-
-            public void addr(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] + _registers[input2];
-            }
-
-            public void addi(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] + input2;
-            }
-
-            public void mulr(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] * _registers[input2];
-            }
-
-            public void muli(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] * input2;
-            }
-
-            public void banr(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] & _registers[input2];
-            }
-
-            public void bani(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] & input2;
-            }
-
-            public void borr(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] | _registers[input2];
-            }
-
-            public void bori(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1] | input2;
-            }
-
-            public void setr(int input1, int input2, int output)
-            {
-                _registers[output] = _registers[input1];
-            }
-
-            public void seti(int input1, int input2, int output)
-            {
-                _registers[output] = input1;
-            }
-
-            public void gtir(int input1, int input2, int output)
-            {
-                _registers[output] = (input1 > _registers[input2]) ? 1 : 0;
-            }
-
-            public void gtri(int input1, int input2, int output)
-            {
-                _registers[output] = (_registers[input1] > input2) ? 1 : 0;
-            }
-
-            public void gtrr(int input1, int input2, int output)
-            {
-                _registers[output] = (_registers[input1] > _registers[input2]) ? 1 : 0;
-            }
-
-            public void eqir(int input1, int input2, int output)
-            {
-                _registers[output] = (input1 == _registers[input2]) ? 1 : 0;
-            }
-
-            public void eqri(int input1, int input2, int output)
-            {
-                _registers[output] = (_registers[input1] == input2) ? 1 : 0;
-            }
-
-            public void eqrr(int input1, int input2, int output)
-            {
-                _registers[output] = (_registers[input1] == _registers[input2]) ? 1 : 0;
-            }
+            int[] result = { 0, 0, 0, 0 };
+            Array.Copy(reg, 0, result, 0, 4);
+            result[output] = instr[cmd](reg, in1, in2);
+            return result;
         }
 
         public void SolveA()
         {
+            int cmd    = 0;
             int input1 = 0;
             int input2 = 0;
             int output = 0;
             int result = 0;
-            int[] before = { 0, 0, 0, 0 };
-            int[] after  = { 0, 0, 0, 0 };
-            CPU cpu = new CPU();
+
+            int[] before    = { 0, 0, 0, 0 };
+            int[] after     = { 0, 0, 0, 0 };
+            int[] cmdResult = { 0, 0, 0, 0 };
 
             foreach (string line in File.ReadLines("16A_input.txt"))
             {
@@ -128,47 +67,22 @@ namespace advent_of_code_2018
                 }
                 else if (parts[0] == "After")
                 {
-                    int numPossible = 0;
                     after = parts.Skip(1).Take(4).Select(s => int.Parse(s)).ToArray(); 
 
-                    cpu.Set(before); cpu.addr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.addi(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.mulr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.muli(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.banr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.bani(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.borr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.bori(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.setr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.seti(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.gtir(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.gtri(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.gtrr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.eqir(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.eqri(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
-                    cpu.Set(before); cpu.eqrr(input1, input2, output); 
-                    if (Enumerable.SequenceEqual(cpu.Get(), after)) numPossible++;
+                    int numPossible = Enumerable.Range(0, instr.Count())
+                        .ToList()
+                        .Where(c => {
+                            cmdResult = ExecInstr(before, c, input1, input2, output);
+                            return Enumerable.SequenceEqual(cmdResult, after);
+                        })
+                        .Count();
 
                     if (numPossible >= 3)
                         result++;
                 }
                 else
                 {
+                    cmd    = int.Parse(parts[0]);
                     input1 = int.Parse(parts[1]);
                     input2 = int.Parse(parts[2]);
                     output = int.Parse(parts[3]);
@@ -180,8 +94,19 @@ namespace advent_of_code_2018
 
         public void SolveB()
         {
-            int result = 0;
-            Console.WriteLine("Day 16 B: " + result);  //= 
+            int[] reg = { 0, 0, 0, 0 };
+
+            foreach (string line in File.ReadLines("16B_input.txt"))
+            {
+                string[] delimiters = { " ", ",", "[", "]", ":" };
+                int[] parts = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(s => int.Parse(s))
+                                  .ToArray();
+
+                reg = ExecInstr(reg, parts[0], parts[1], parts[2], parts[3]);
+            }
+
+            Console.WriteLine("Day 16 B: " + reg[0]);  //= 
         }
     }
 }
